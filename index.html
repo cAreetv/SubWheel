@@ -1,0 +1,389 @@
+
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Summer Subathon Wheel!</title>
+    <meta charset="utf-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript">
+      /*--------------------------------------------------------------//
+      //--------------------------------------------------------------//
+      //--------------------------------------------------------------*/
+
+      var insertValues = {
+        "unlucky": 25,
+        "raffle": 25,
+        "mug": 25,
+        "msibag": 25,
+      };
+
+      var winValuesOne = {
+        "unlucky": 35,
+        "raffle": 63,
+        "mug": 1,
+        "msibag": 1,
+      };
+
+      var winValuesTwo = {
+        'unlucky': 30,
+        'raffle':60,
+        'mug': 8,
+        'msibag': 2,
+      };
+      
+      var winValuesThree = {
+        'unlucky': 15,
+        'raffle': 70,
+        'mug': 10,
+        'msibag': 5,
+      };
+
+
+        
+        
+      var images = {
+        "unlucky": "img/unlucky.png",
+        "raffle": "img/raffle.png",
+        "mug": "img/mug.png",
+        "msibag": "img/msibag.png",
+      };
+
+      /*--------------------------------------------------------------//
+      //--------------------------------------------------------------//
+      //--------------------------------------------------------------*/
+
+
+
+
+
+
+
+
+
+
+      function getWeightedArray(obj) {
+        var newArr = new Array();
+
+        for (var prop in obj) {
+          if (obj.hasOwnProperty(prop)) {
+            for (var i = 0; i < obj[prop]; i++) {
+              newArr.push(prop);
+            }
+          }
+        }
+
+        return newArr;
+      }
+
+      function getRandomElem(weightedArr) {
+        return weightedArr[Math.floor(Math.random() * weightedArr.length)];
+      }
+
+      var insertWeighted = getWeightedArray(insertValues);
+      //var winWeighted = getWeightedArray(winValues);
+     
+
+      var audio = new Array();
+      var display;
+
+      $(document).ready(function() {
+        for (var i = 0; i < 1; i++) {
+          var snd = new Audio("audio/scroll.mp3");
+          snd.volume = 0.5;
+          audio[i] = snd;
+        }
+
+        display = new Audio("audio/display.mp3");
+        display.volume = 0.1;
+
+        $.extend($.easing, {
+          easeOutSine: function(x, t, b, c, d) {
+            return c * Math.sin(t/d * (Math.PI/2)) + b;
+          }
+        });
+
+        $(".btn-open").click(function() {
+          var container = $("#roll-items");
+          container.css("left", "50%");
+          container.empty();
+
+          for (var i = 0; i < 75; i++) {
+            var item = getRandomElem(insertWeighted);
+
+            container.append("<img class=\"tile badItem\" category=\"" + item + "\" src=\"" + images[item] + "\">");
+          }
+            
+          var tier = $(this).attr('data-tier'),
+              winWeighted;
+            
+          if(tier == 1) {
+              winWeighted = getWeightedArray(winValuesOne);
+          } else if(tier == 2) {
+              winWeighted = getWeightedArray(winValuesTwo);
+          } else if(tier == 3) {
+              winWeighted = getWeightedArray(winValuesThree);
+          }
+            
+          var winnerItem = getRandomElem(winWeighted);
+
+          container.find("img:eq(" + Math.floor(Math.random() * 10 + 60) + ")").after("<img class=\"tile badItem\" category=\"" + winnerItem + "\" src=\"" + images[winnerItem] + "\">");
+
+          var winner = container.find("img:gt(59)").filter("[category=" + winnerItem + "]").first();
+            container.find("img:gt(59)").filter("[category=" + winnerItem + "]").addClass('winningItem');
+          if (!winner.length) {
+            return;
+          }
+
+          $(".div5").show();
+          $(".div2").hide();
+
+          var initialPosition = container.outerWidth() / 2;
+          var distance = Math.floor(winner.position().left) + (Math.floor(Math.random() * 100) + 20);
+          var width = container.find("img:eq(1)").position().left - container.find("img:eq(0)").position().left;
+
+          var i = 0;
+          var lastSound = 0;
+
+          container.animate({left: (initialPosition - distance) + "px"}, {
+            duration: 2000,
+            easing: "easeOutSine",
+            queue: false,
+            progress: function(a, p, c) {
+              var offset = initialPosition - container.position().left;
+              if (offset > lastSound * width) {
+                if (i > 14) {
+                  i = 0;
+                }
+                audio[i++].play();
+                lastSound++;
+              }
+            },
+            complete: function() {
+              setTimeout(function() {
+                display.play();
+                $(".div7").find("img").attr("src", images[winnerItem]);
+                  $('.badItem').css('opacity', '.3');
+                  $('.winningItem').css('opacity', '.3');
+                  $('.winningItem').first().css('opacity', '1');
+                  $('.goAgainBtn').fadeIn();
+                //$(".div7").show();
+              }, 1000);
+            }
+          });
+        });
+
+        $("#close").click(function() {
+          display.pause();
+          display.currentTime = 0;
+          $(".div2").show();
+          $(".div5").hide();
+          $(".div7").hide();
+        });
+      });
+        $(document).on("click", ".goAgainBtn", function() {
+             $('.goAgainBtn').fadeOut('fast');
+            $('.div5').fadeOut('fast', function (){
+            $('.div2').fadeIn('slow');
+                });
+        })
+    </script>
+    <style type="text/css">
+      body {
+        font-family: "Gill Sans", sans-serif;
+        background-image: url(img/bg-image.png);
+        background-repeat: no-repeat;
+        background-size: cover;
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        width: 100vw;
+          overflow: hidden;
+      }
+      .item-list {
+        margin: auto !important;
+        padding: 15px 0;
+      }
+      .title {
+        color: #eee;
+        padding-top: 20px;
+      }
+      .tile {
+        width: 140px;
+        margin: 10px 5px;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        user-drag: none;
+        -webkit-user-drag: none;
+      }
+      .green {
+            cursor: pointer;
+    display: inline-block;
+    padding: 12px 30px;
+    transition: 100ms;
+    border-radius: 4px;
+    margin: 8px;
+    color: #ec56b0;
+	font-weight: bold
+    font-size: 16px;
+    letter-spacing: .4px;
+    background-color: #0f1b4d;
+    background-size: 200% 200%;
+    background-position: 100% 100%;
+    /* box-shadow: 0 2px 0px 0 #FFAA00; */
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+      }
+        .green:hover {
+    background-position: 0% 200%;
+}
+      label {
+        display: block;
+        color: #eee;
+        margin-top: 15px;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        -o-user-select: none;
+        user-select: none;
+      }
+      .div1 {
+        width: 1000px;
+        margin: auto !important;
+      }
+      .div3 {
+        height: 164px;
+        background-repeat: repeat;
+        width: 50%;
+        margin: auto !important;
+        margin-top: 20px !important;
+        margin-bottom: 20px !important;
+        padding: 15px 0;
+        text-align: center;
+      }
+      .div5 {
+		height: 288px;
+        text-align: center;
+        padding-bottom: 20px;
+      }
+      .div6 {
+        height: 164px;
+        position: relative;
+        background-color: #66000000;
+        background-repeat: repeat;
+        width: 50%;
+        margin: auto !important;
+        margin-top: 20px !important;
+        margin-bottom: 20px !important;
+        padding: 15px 0;
+        text-align: center;
+        line-height: 0;
+        overflow: hidden;
+      }
+      .div7 {
+        position: absolute;
+        width: 500px;
+        height: 450px;
+        z-index: 10;
+        top: 0; left: 0; bottom: 0; right: 0;
+        margin: auto !important;
+        background-color: #000000;
+        text-align: center;
+        line-height: 450px;
+          -webkit-box-shadow: 0px 0px 3000px 2000px rgba(210,48,65);
+          -moz-box-shadow: 0px 0px 3000px 2000px rgba(210,48,65);
+          box-shadow: 0px 0px 3000px 2000px rgba(210,48,65);
+        border: 1px solid grey;
+      }
+      .div7>div {
+        display: inline-block;
+        vertical-align: middle;
+        line-height: initial;
+      }
+      .div7>div>img {
+        display: block;
+        width: 300px;
+        height: 300px;
+        margin: 20px auto !important;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+        user-drag: none;
+        -webkit-user-drag: none;
+      }
+      #roll-items {
+        position: relative;
+        top: 0;
+        left: 50%;
+        z-index: 1;
+        font-size: 0;
+        white-space: nowrap;
+        backface-visibility: hidden;
+        text-align: left;
+      }
+      #roll-winner {
+        position: absolute;
+        top: 0;
+        left: 50%;
+        z-index: 2;
+        height: 100%;
+        box-shadow: 0px 0px 1px 1px #D3D3D3;
+      }
+      #preload {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="div1">
+     <div class="div5" style="display: none;">
+        <div class="div6">
+          <div id="roll-items"></div>
+          <div id="roll-winner"></div>
+        </div>
+        <div class="goAgainBtn green" style="display: none;">BACK</div>
+      </div>
+      <div class="div2">
+        <div class="div3">
+          <img class="tile" src="img/case.png" style="width:220px;height:150px;"/>
+        </div>
+          <br><br>
+         <center>
+        <a id="open" class="green btn-open" data-tier="1">TIER1</a>
+        <a id="open2" class="green btn-open" data-tier="2">TIER2</a>
+        <a id="open3" class="green btn-open" data-tier="3">TIER3</a>
+         </center>
+      </div>
+      <div class="div7" style="display: none;">
+        <div>
+          <img class="item" />
+          <a id="close" class="green">OK</a>
+        </div>
+      </div>
+      <div class="div4">
+        <table class="item-list">
+          <tr>
+            <td>
+              <img class="tile" src="img/unlucky.png" />
+            </td>		  
+            <td>
+              <img class="tile" src="img/raffle.png" />
+            </td>
+            <td>
+              <img class="tile" src="img/mug.png" />
+            </td>
+            <td>
+              <img class="tile" src="img/msibag.png" />
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
+
